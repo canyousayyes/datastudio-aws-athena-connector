@@ -1,4 +1,4 @@
-// Source: https://github.com/smithy545/aws-apps-scripts/blob/master/aws.js
+// Forked from: https://github.com/smithy545/aws-apps-scripts
 var AWS = (function() {
   // Keys cannot be retrieved once initialized but can be changed
   var accessKey;
@@ -116,6 +116,33 @@ var AWS = (function() {
 
       var response = UrlFetchApp.fetch(request, options);
       return response;
+    },
+    /**
+     * High-level function to call AWS API with JSON request/response.
+     *
+     * @param {string} service - the aws service to connect to (e.g. 'ec2', 'iam', 'codecommit')
+     * @param {string} region - the aws region your command will go to (e.g. 'us-east-1')
+     * @param {string} action - the api action to call
+     * @param {(string|object)} [payload={}] - the payload to send. Defults to ''.
+     * @param {Object} [headers={Host:..., X-Amz-Date:...}] - the headers to attach to the request. Host and X-Amz-Date are premade for you.
+     * @param {string} [uri='/'] - the path after the domain before the action. Defaults to '/'.
+     * @return {Object} the server response to the request
+     */
+    post: function(service, region, action, payload, headers, uri) {
+      var headers = headers || {};
+      headers["Content-Type"] = "application/x-amz-json-1.1";
+
+      var response = this.request(service, region, action, null, "POST", payload, headers, uri);
+      try {
+        var data = JSON.parse(response);
+      } catch (err) {
+        throw new Error('Unable to parse AWS response. Error: ' + err.message);
+      }
+      if (data.__type && data.__type.indexOf('Exception') >= 0) {
+        throw new Error(data.__type + ', Message: ' + data.Message);
+      }
+
+      return data;
     },
     /**
      * Sets new authorization keys
