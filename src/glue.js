@@ -49,8 +49,15 @@ function glueTableToFields(table) {
   return fields;
 }
 
-function getGlueTableSchema(region, databaseName, tableName) {
-  var result = AWS.post('glue', region, 'AWSGlue.GetTable', {'DatabaseName': databaseName, 'Name': tableName});
+function getGlueTableSchema(request) {
+  var params = request.configParams;
+  AWS.init(params.awsAccessKeyId, params.awsSecretAccessKey);
+
+  var payload = {
+    'DatabaseName': params.databaseName,
+    'Name': params.tableName
+  };
+  var result = AWS.post('glue', params.awsRegion, 'AWSGlue.GetTable', payload);
   var fields = glueTableToFields(result.Table).build();
   return { schema: fields };
 }
