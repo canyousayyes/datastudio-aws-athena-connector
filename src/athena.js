@@ -1,13 +1,19 @@
 function generateAthenaQuery(request) {
   var defaultRowLimit = 1000;
+  var params = request.configParams || {};
 
-  var rowLimit = parseInt(request.configParams.rowLimit || defaultRowLimit);
+  var rowLimit = parseInt(params.rowLimit || defaultRowLimit);
   var columns = request.fields.map(function (field) {
     return '"' + field.name + '"';
   });
-  var table = request.configParams.tableName;
+  var table = params.tableName;
 
   var query = 'SELECT ' + columns.join(', ') + ' FROM "' + table + '"';
+  if (params.dateRangeColumn) {
+    var startDate = request.dateRange.startDate;
+    var endDate = request.dateRange.endDate;
+    query += ' WHERE "' + params.dateRangeColumn + '" BETWEEN \'' + startDate + '\' AND \'' + endDate + '\'' ;
+  }
   if (rowLimit !== -1) {
     query += ' LIMIT ' + rowLimit;
   }

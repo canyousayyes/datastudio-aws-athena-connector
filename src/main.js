@@ -44,11 +44,18 @@ function getConfig(request) {
     .setPlaceholder('s3://<bucket>/<directory>');
 
   config.newTextInput()
+    .setId('dateRangeColumn')
+    .setName('Date Range Column Name')
+    .setHelpText('(Optional) If date range is applied in the report, the corresponding column to apply the filtering conditions.');
+
+  config.newTextInput()
     .setId('rowLimit')
     .setName('Row Limit')
     .setHelpText('Maximum number of rows to fetch in each query. Default is 1000. If set to -1, all rows will be fetched.')
     .setPlaceholder('1000')
     .setAllowOverride(true);
+
+  config.setDateRangeRequired(true);
 
   return config.build();
 }
