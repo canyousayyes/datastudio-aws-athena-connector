@@ -36,7 +36,6 @@ function waitAthenaQuery(region, queryExecutionId) {
   while (1) {
     var result = AWS.post('athena', region, 'AmazonAthena.GetQueryExecution', payload);
     var state = result.QueryExecution.Status.State.toLowerCase();
-    Logger.log(state);
     switch (state) {
       case 'succeeded':
         return true;
@@ -62,13 +61,20 @@ function getAthenaQueryResults(region, queryExecutionId) {
       payload.NextToken = nextToken;
     }
 
+    // Parse and append data
     var result = AWS.post('athena', region, 'AmazonAthena.GetQueryResults', payload);
-    var newRows = result.ResultSet.Rows.map(function (row) {
-      return row.Data.map(function (data) {
-        return data.VarCharValue;
-      });
+    var columns = result.ResultSet.ResultSetMetadata.ColumnInfo.map(function (info) {
+      return info.Name;
     });
-    rows = rows.concat(newRows);
+    result.ResultSet.Rows.forEach(function (row) {
+      // Combine [val0, val1, ...] and [col0, col1, ...] into { col0: val0, col1: val1, ... }
+      var newRow = {};
+      row.Data.forEach(function (data, index) {
+        var column = columns[index];
+        newRow[column] = data.VarCharValue;
+      });
+      rows.push(newRow);
+    });
 
     nextToken = result.NextToken;
     if (!nextToken) {
@@ -76,7 +82,7 @@ function getAthenaQueryResults(region, queryExecutionId) {
     }
   }
 
-  // Remove header row
+  // Athena data is CSV, need to remove header row
   rows.shift();
   return rows;
 }
