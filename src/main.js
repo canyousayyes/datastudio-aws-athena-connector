@@ -25,12 +25,12 @@ function getConfig(request) {
 
   config.newTextInput()
     .setId('awsRegion')
-    .setName('AWS Region of the Table')
+    .setName('AWS Region')
     .setPlaceholder('us-east-1');
 
   config.newTextInput()
     .setId('databaseName')
-    .setName('Glue Database')
+    .setName('Glue Database Name')
     .setPlaceholder('default');
 
   config.newTextInput()
@@ -53,12 +53,57 @@ function getConfig(request) {
   return config.build();
 }
 
+function throwUserError(message) {
+  DataStudioApp.createCommunityConnector()
+    .newUserError()
+    .setText(message)
+    .throwException();
+}
+
+function validateConfig(configParams) {
+  configParams = configParams || {};
+  if (!configParams.awsAccessKeyId) {
+    throwUserError('AWS_ACCESS_KEY_ID is empty.');
+  }
+  if (!configParams.awsSecretAccessKey) {
+    throwUserError('AWS_SECRET_ACCESS_KEY is empty.');
+  }
+  if (!configParams.awsRegion) {
+    throwUserError('AWS Region is empty.');
+  }
+  if (!configParams.databaseName) {
+    throwUserError('Database Name is empty.');
+  }
+  if (!configParams.tableName) {
+    throwUserError('Table Name is empty.');
+  }
+  if (configParams.outputLocation.indexOf('s3://') !== 0) {
+    throwUserError('Query Output Location must in the format of s3://<bucket>/<directory>');
+  }
+  if (configParams.rowLimit) {
+    var rowLimit = parseInt(configParams.rowLimit);
+    if (isNaN(rowLimit)) {
+      throwUserError('Invalid Row Limit.');
+    }
+  }
+}
+
 function getSchema(request) {
-  var fields = getFieldsFromGlue(request).build();
-  return { schema: fields };
+  validateConfig(request.configParams);
+  try {
+    var fields = getFieldsFromGlue(request).build();
+    return { schema: fields };
+  } catch (err) {
+    throwUserError(err.message);
+  }
 }
 
 function getData(request) {
-  var data = getDataFromAthena(request);
-  return data;
+  validateConfig(request.configParams);
+  try {
+    var data = getDataFromAthena(request);
+    return data;
+  } catch (err) {
+    throwUserError(err.message);
+  }
 }
