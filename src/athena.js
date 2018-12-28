@@ -86,3 +86,72 @@ function getAthenaQueryResults(region, queryExecutionId) {
   rows.shift();
   return rows;
 }
+
+/**
+ * Transform the Athena query results to required format.
+ *
+ * @param {Array} schema Array of objects defining the requested fields.
+ * @param {Array} queryResults Array of values obtained from getAthenaQueryResults().
+ * @returns {Array} Array of rows with the data type transformed.
+ */
+function queryResultsToRows(schema, queryResults) {
+  return queryResults.map(function (data) {
+    var values = [];
+    schema.forEach(function (field) {
+      var value = data[field.name];
+      // Athena returned all values as strings, need to convert data type
+      switch (field.dataType.toLowerCase()) {
+        case 'number':
+          values.push(parseFloat(value));
+          break;
+        case 'boolean':
+          values.push(value.toLowerCase() === 'true');
+          break;
+        default:
+          values.push(value);
+          break;
+      }
+    });
+    return { values: values };
+  });
+
+
+  return rows.map(function (row) {
+    return row.map(function (field, index) {
+      switch (schema[index].dataType.toLowerCase()) {
+        case 'number':
+          return parseFloat(field);
+        case 'boolean':
+          return field === 'true';
+        default:
+          return field;
+      }
+    });
+  });
+}
+
+function getDataFromAthena(request) {
+  var requestedFieldIds = request.fields.map(function(field) {
+    return field.name;
+  });
+  var requestedFields = getFieldsFromGlue(request).forIds(requestedFieldIds);
+  var schema = requestedFields.build();
+
+  var params = request.configParams;
+  AWS.init(params.awsAccessKeyId, params.awsSecretAccessKey);
+
+  // Generate and submit query
+  var query = generateAthenaQuery(request);
+  var runResult = runAthenaQuery(params.awsRegion, params.databaseName, query, params.outputLocation);
+  var queryExecutionId = runResult.QueryExecutionId;
+  waitAthenaQuery(params.awsRegion, queryExecutionId);
+
+  // Fetch and transform data
+  var queryResults = getAthenaQueryResults(params.awsRegion, queryExecutionId);
+  var rows = queryResultsToRows(schema, queryResults);
+
+  return {
+    schema: schema,
+    rows: rows
+  };
+}
