@@ -46,7 +46,7 @@ function getConfig(request) {
   config.newTextInput()
     .setId('rowLimit')
     .setName('Row Limit')
-    .setHelpText('Max. number of rows to fetch in query. If set to empty or 0, all rows will be fetched.')
+    .setHelpText('Maximum number of rows to fetch in each query. Default is 1000. If set to -1, all rows will be fetched.')
     .setPlaceholder('1000')
     .setAllowOverride(true);
 

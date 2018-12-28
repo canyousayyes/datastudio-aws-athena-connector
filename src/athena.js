@@ -1,12 +1,14 @@
 function generateAthenaQuery(request) {
+  var defaultRowLimit = 1000;
+
+  var rowLimit = parseInt(request.configParams.rowLimit || defaultRowLimit);
   var columns = request.fields.map(function (field) {
     return '"' + field.name + '"';
   });
   var table = request.configParams.tableName;
-  var rowLimit = parseInt(request.configParams.rowLimit);
 
   var query = 'SELECT ' + columns.join(', ') + ' FROM "' + table + '"';
-  if (rowLimit) {
+  if (rowLimit !== -1) {
     query += ' LIMIT ' + rowLimit;
   }
 
