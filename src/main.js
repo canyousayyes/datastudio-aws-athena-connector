@@ -31,10 +31,6 @@ function getConfig(request) {
   var cc = DataStudioApp.createCommunityConnector();
   var config = cc.getConfig();
 
-  config.newInfo()
-    .setId('instructions')
-    .setText('TODO');
-
   config.newTextInput()
     .setId('awsAccessKeyId')
     .setName('AWS_ACCESS_KEY_ID');
