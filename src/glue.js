@@ -1,3 +1,13 @@
+/**
+ * Transform Glue table schema into Data Studio Fields.
+ *
+ * For each column in Glue Table, it maps to one of the data types in Data Studio.
+ * Glue Table data types: https://docs.aws.amazon.com/athena/latest/ug/data-types.html
+ * NOTE: BINARY, ARRAY, MAP, STRUCT are ignored, since there's no corresponding data types.
+ *
+ * @param  {Object} table Table object from AWSGlue.GetTable.
+ * @return {Object} Data Studio Fields object.
+ */
 function glueTableToFields(table) {
   var cc = DataStudioApp.createCommunityConnector();
   var fields = cc.getFields();
@@ -6,9 +16,6 @@ function glueTableToFields(table) {
 
   columns.forEach(function (column) {
     // Set fields based on data type
-    // Glue Table data types: https://docs.aws.amazon.com/athena/latest/ug/data-types.html
-    // Data Studio data types: https://developers.google.com/datastudio/connector/reference#datatype
-    // NOTE: BINARY, ARRAY, MAP, STRUCT are not handled
     var field;
     switch (column.Type.toLowerCase()) {
       case 'boolean':
@@ -49,6 +56,12 @@ function glueTableToFields(table) {
   return fields;
 }
 
+/**
+ * Get schema data from AWS Glue and return Fields for Data Studio.
+ *
+ * @param  {Object} request Data/Schema request parameters.
+ * @return {Object} Data Studio Fields object.
+ */
 function getFieldsFromGlue(request) {
   var params = request.configParams;
   AWS.init(params.awsAccessKeyId, params.awsSecretAccessKey);
