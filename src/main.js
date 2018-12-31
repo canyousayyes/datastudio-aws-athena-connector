@@ -51,7 +51,7 @@ function getConfig(request) {
   config.newTextInput()
     .setId('databaseName')
     .setName('Glue Database Name')
-    .setPlaceholder('default');
+    .setPlaceholder('e.g. default');
 
   config.newTextInput()
     .setId('tableName')
