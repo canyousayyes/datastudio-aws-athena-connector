@@ -17,7 +17,8 @@ function glueTableToFields(table) {
   columns.forEach(function (column) {
     // Set fields based on data type
     var field;
-    switch (column.Type.toLowerCase()) {
+    var column_type = column.Type.toLowerCase().indexOf('decimal') > -1 ? 'decimal' : column.Type.toLowerCase()
+    switch (column_type) {
       case 'boolean':
         field = fields.newDimension()
           .setId(column.Name)
